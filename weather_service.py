@@ -12,7 +12,7 @@ class WeatherService:
     
     def get_weather(self, country_code="US"):
         try:
-            zip_code = st.config.get_option("location.zip_code")
+            zip_code = st.secrets.get("weather", {}).get("zip_code", "")
             params = {
                 "key": self.api_key,
                 "q": f"{zip_code}",
