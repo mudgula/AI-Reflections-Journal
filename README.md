@@ -64,7 +64,7 @@ pip install -r requirements.txt
    - Pull the required model:
 
    ```bash
-   ollama pull llama2:3b
+   ollama pull dolphin3:latest
    ```
 
 5. Set up WeatherAPI:
@@ -81,7 +81,7 @@ pip install -r requirements.txt
 6. Initialize the database:
 
 ```bash
-python migrate_db.py
+python initialize_db.py
 ```
 
 ## Running the Application
@@ -123,12 +123,13 @@ The application will be available at `http://localhost:8501`
 
 ```
 ai-reflection-journal/
-├── app.py                 # Main Streamlit application
-├── database.py           # Database operations
-├── ai_services.py        # AI/LLM integration
-├── weather_service.py    # Weather API integration
-├── migrate_db.py         # Database migration script
-├── requirements.txt      # Python dependencies
+├── app.py               # Main Streamlit application
+├── database.py          # Database operations
+├── ai_services.py       # AI/LLM integration
+├── weather_service.py   # Weather API integration
+├── initialize_db.py     # Database initialization script
+├── migrate_db.py        # Database migration script (for backwards compatibility)
+├── requirements.txt     # Python dependencies
 ├── README.md            # Documentation
 ├── .gitignore           # Git ignore rules
 └── .streamlit/          # Streamlit configuration

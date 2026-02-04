@@ -12,6 +12,3 @@ enableStaticServing = true
 [llm]
 ollama_model = "dolphin3:latest"
 default_provider = "ollama"
-
-[location]
-zip_code = "68164"

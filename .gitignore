@@ -118,7 +118,7 @@ ehthumbs.db
 Icon
 
 # Streamlit
-.streamlit/
+.streamlit/secrets.toml
 
 # Database files
 *.db
