@@ -1,18 +1,16 @@
-import streamlit as st
 from datetime import datetime
-import pandas as pd
 from textblob import TextBlob
 import plotly.express as px
+import pandas as pd
 import random
-import logging
-from streamlit.components.v1 import html
+import streamlit as st
+import os
 from database import ReflectionDB
 from ai_services import AIService
 from weather_service import WeatherService
 import json
-from typing import Literal
+import logging
 
-# Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -53,6 +51,7 @@ def generate_prompt(mood):
         ]
     }
     return random.choice(prompts[mood])
+
 
 def display_weather():
     if 'weather_service' not in st.session_state:
@@ -133,7 +132,7 @@ def edit_entry(entry):
     st.subheader("Edit Entry")
     
     # Convert mood_factors string back to list
-    current_factors = entry['mood_factors'].split(', ') if pd.notna(entry['mood_factors']) else []
+    current_factors = entry['mood_factors'].split(', ') if entry.get('mood_factors') else []
     
     # Edit fields
     edited_mood = st.slider("Mood", 1, 5, int(entry['mood']))
@@ -172,27 +171,26 @@ def past_entries_page():
         st.rerun()
     
     entries = st.session_state.db.get_entries()
-    
-    if not entries.empty:
-        for _, entry in entries.iterrows():
+    if entries:
+        for entry in entries:
             with st.expander(f"Entry from {entry['date'][:10]}"):
                 st.write(f"**Mood:** {'😊' * int(entry['mood'])}")
-                if entry['mood_factors']:
+                if entry.get('mood_factors'):
                     st.write(f"**Factors:** {entry['mood_factors']}")
                 st.write(entry['content'])
-                
+
                 # Display AI Insight if available
-                if pd.notna(entry['ai_insight']):
+                if entry.get('ai_insight'):
                     st.markdown("### AI Insight")
                     st.markdown(entry['ai_insight'])
-                
+
                 # Display weather if available
-                if pd.notna(entry['weather_data']):
+                if entry.get('weather_data'):
                     weather = json.loads(entry['weather_data'])
                     st.markdown("### Weather During Entry")
                     st.write(f"🌡️ {weather['temperature']}°F - {weather['description']}")
                     st.write(f"💧 Humidity: {weather['humidity']}%")
-                
+
                 sentiment = TextBlob(entry['content']).sentiment  # type: ignore[attr-defined]
                 score = sentiment.polarity  # type: ignore[attr-defined]
                 sent = ""
@@ -203,7 +201,7 @@ def past_entries_page():
                 else:
                     sent = "Neutral"
                 st.write(f"**Sentiment:** {sent}")
-                
+
                 # Edit and Delete buttons
                 col1, col2 = st.columns(2)
                 with col1:
@@ -224,17 +222,18 @@ def past_entries_page():
 
 def insights_page():
     st.header("Insights & Analytics")
-    entries = st.session_state.db.get_entries(limit=100)
+    raw_entries = st.session_state.db.get_entries(limit=100)
+    entries = pd.DataFrame(raw_entries) if raw_entries else pd.DataFrame()
     
     if not entries.empty:
         fig_mood = px.line(entries, x='date', y='mood',
                           title='Mood Trends Over Time')
         st.plotly_chart(fig_mood)
-        
+
         fig_sentiment = px.scatter(entries, x='mood', y='sentiment',
                                  title='Mood vs. Sentiment Analysis')
         st.plotly_chart(fig_sentiment)
-        
+
         if entries['mood_factors'].notna().any():
             factors = entries['mood_factors'].str.split(', ').explode()
             factor_counts = factors.value_counts()
@@ -246,9 +245,17 @@ def insights_page():
 def main():
     st.set_page_config(page_title="AI Reflection Journal", layout="wide")
     
+    # Prompt for encrypted DB password and store it in session state
+    if 'db_password' not in st.session_state:
+        pwd = st.text_input('Database password', type='password')
+        if not pwd:
+            st.warning('Please enter the database password to continue.')
+            st.stop()
+        st.session_state.db_password = pwd
+    else:
+        pwd = st.session_state.db_password
     if 'db' not in st.session_state:
-        logger.info("Initializing database connection...")
-        st.session_state.db = ReflectionDB()
+        st.session_state.db = ReflectionDB(password=pwd)
     
     st.title("AI Reflection Journal")
     

@@ -1,15 +1,57 @@
 import os
-import sqlite3
+import argparse
 import logging
 from typing import Set
+from sqlcipher3 import dbapi2 as sqlcipher
 
 # Set up basic logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
+
+def open_encrypted_db(db_path: str, password: str | None = None) -> sqlcipher.Connection:
+    """Open a SQLite (SQLCipher) connection and apply the encryption key if provided.
+
+    If ``password`` is ``None`` the connection is opened without a key (useful for testing).
+    """
+    conn = sqlcipher.connect(db_path)
+    if password:
+        conn.execute(f"PRAGMA key = '{password}';")
+    return conn
+
+
+def get_current_columns(db_path: str) -> Set[str]:
+    """Return a set of column names for the ``entries`` table.
+
+    If the table does not exist the returned set will be empty.
+    """
+    # Prefer the password stored in Streamlit session state if available; fall back to env var
+    try:
+        import streamlit as st
+        password = getattr(st.session_state, "db_password", None)
+    except Exception:
+        password = None
+    if not password:
+        password = os.getenv("REFLECTIONS_DB_PASSWORD")
+    # If still no password, prompt the user interactively
+    if not password:
+        try:
+            password = input("Enter database password (leave empty for none): ") or None
+        except Exception:
+            password = None
+    conn = open_encrypted_db(db_path, password)
+    cur = conn.cursor()
+    try:
+        cur.execute("PRAGMA table_info(entries)")
+        cols = {row[1] for row in cur.fetchall()}
+    finally:
+        conn.close()
+    return cols
+
+
+# --------------------------------------------------------------------
 # Schema definition (canonical source of truth)
-# ---------------------------------------------------------------------------
+# --------------------------------------------------------------------
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS entries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,27 +80,10 @@ EXPECTED_COLUMNS: Set[str] = {
 }
 
 
-def get_current_columns(db_path: str) -> Set[str]:
-    """Return a set of column names for the 'entries' table.
-
-    If the table does not exist the returned set will be empty.
-    """
-    conn = sqlite3.connect(db_path)
-    cur = conn.cursor()
-    try:
-        cur.execute("PRAGMA table_info(entries)")
-        cols = {row[1] for row in cur.fetchall()}
-    finally:
-        conn.close()
-    return cols
-
-
 def create_database(db_path: str) -> None:
-    """Create a fresh reflections.db file with the full schema.
-
-    The function uses ``executescript`` so that the CREATE statement is run as‑is.
-    """
-    conn = sqlite3.connect(db_path)
+    """Create a fresh reflections.db file with the full schema."""
+    password = os.getenv("REFLECTIONS_DB_PASSWORD")
+    conn = open_encrypted_db(db_path, password)
     cur = conn.cursor()
     try:
         cur.executescript(CREATE_TABLE_SQL)
@@ -99,12 +124,25 @@ def ensure_database() -> str:
     # Import migrate_db lazily to avoid circular import / unnecessary load
     import importlib
     migrate_mod = importlib.import_module("migrate_db")
-    # The migration script expects to locate the DB itself, so just call it
     migrate_mod.migrate_database()
     return f"Migration applied – added columns: {', '.join(sorted(missing))}."
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Initialize or migrate the reflections SQLite database.")
+    parser.add_argument("--password", help="Password (encryption key) for the SQLite database")
+    args = parser.parse_args()
+    # Prompt for password if not supplied via flag
+    if not args.password:
+        try:
+            import getpass
+            pwd = getpass.getpass('Enter database password (leave blank for none): ')
+        except Exception:
+            pwd = None
+    else:
+        pwd = args.password
+    if pwd:
+        os.environ["REFLECTIONS_DB_PASSWORD"] = pwd
     try:
         message = ensure_database()
         print(message)

@@ -55,7 +55,8 @@ class AIService:
                 input_variables=["content", "mood", "factors"],
                 template="""Act as an empathetic therapist or personal development coach. 
                 Analyze the following journal entry and provide thoughtful insights, validation, 
-                and gentle suggestions for growth (2-3 sentences max).
+                and gentle suggestions for growth (3-4 sentences max). Finally, ask one open-ended
+                question intended to inspire reflection.
 
                 Journal Entry: {content}
                 Mood Level (1-5): {mood}
