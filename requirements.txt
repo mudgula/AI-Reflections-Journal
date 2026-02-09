@@ -2,6 +2,6 @@ streamlit
 langchain
 pandas
 plotly
-textblob
-requests
-python-dotenv 
+python-dotenv
+pysqlcipher3
+sqlalchemy
