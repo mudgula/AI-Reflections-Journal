@@ -10,7 +10,7 @@ class AIService:
     def __init__(self, provider="ollama"):
         try:
             self.provider = provider
-            # Get settings from secrets
+            # Get settings from .streamlit/secrets.toml
             llm_secrets = st.secrets.get("llm", {})
             ollama_model = llm_secrets.get("ollama_model", "llama3.2:1b")
             
@@ -32,7 +32,7 @@ class AIService:
             prompt = PromptTemplate(
                 input_variables=[],
                 template="""Generate an inspiring and thoughtful quote about self-reflection, mindfulness, or personal growth. 
-                The quote should be brief (max 2 sentences) and include the author. 
+                The quote should be brief (max 2-3 sentences) and include the author. The quote must be from a real person and not made up.
                 Format: "Quote" - Author"""
             )
             
