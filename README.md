@@ -2,6 +2,9 @@
 
 An intelligent journaling application that combines personal reflection with AI-powered insights, sentiment analysis, and weather tracking. Built with Streamlit and powered by local LLM (Ollama).
 
+**Note:** This application is a fork of [kouissar/AI-Reflections-Journal](https://github.com/kouissar/AI-Reflections-Journal#).
+Some effort will be made to keep this fork in sync with the upstream version, but this is an independent project for my own personal use.
+
 ## Features
 
 - 📝 Daily journaling with mood tracking
@@ -11,6 +14,9 @@ An intelligent journaling application that combines personal reflection with AI-
 - 📈 Mood trends and analytics
 - 💭 AI-generated daily motivational quotes
 - 🏷️ Mood factors tagging
+- 🔒 Native local database encryption
+
+**Status:** The application is functional, with a working Streamlit UI, AI insights via Ollama, weather integration, and SQLite encryption. Database migrations are managed by `initialize_db.py` and `migrate_db.py`. The repository includes a comprehensive `CLAUDE.md` for Claude Code guidance.
 
 ## Screenshots
 
@@ -44,7 +50,7 @@ _Get therapeutic insights and suggestions from the AI_
 
 1. Clone the repository:
    ```
-   git clone https://github.com/kouissar/AI-Reflections-Journal.git
+   git clone https://github.com/mudgula/AI-Reflections-Journal.git
    cd AI-Reflections-Journal
    ```
 2. Create and activate a virtual environment:

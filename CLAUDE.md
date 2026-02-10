@@ -16,9 +16,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   pip install -r requirements.txt
   ```
 
-- **Initialize / migrate the SQLite database**
+- **Initialize / migrate the SQLite database** (creates schema or applies missing columns)
   ```bash
   python initialize_db.py
+  # If you need to force a migration without re‑initialising:
+  python migrate_db.py
   ```
 
 - **Run the Streamlit application**
@@ -26,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   streamlit run app.py
   ```
 
-- **Run the test suite** (if a `tests/` directory is added later)
+- **Run the test suite** (if a `tests/` directory is present)
   ```bash
   python -m pytest tests/
   ```
@@ -43,7 +45,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## High‑Level Architecture
 
-- **`app.py`** – Streamlit entry point. Sets up the UI, navigation, and session state, then delegates to the three main pages:
+- **`app.py`** – Streamlit entry point. Sets up the UI, navigation, and session state, then delegates to three main pages:
   - *New Entry* – collects mood, factors, text; calls `AIService.analyze_entry` and stores the entry via `ReflectionDB`.
   - *Past Entries* – displays stored entries, AI insights, weather data, sentiment, and offers edit/delete actions.
   - *Insights* – aggregates recent entries into a pandas `DataFrame` for Plotly visualisations (mood trends, sentiment vs. mood, factor frequencies).
