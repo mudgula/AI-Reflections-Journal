@@ -9,12 +9,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def open_encrypted_db(db_path: str, password: str | None = None) -> sqlcipher.Connection:
+def open_encrypted_db(db_path: str, password: str | None = None) -> sqlcipher.Connection: # type: ignore[attr-defined]
     """Open a SQLite (SQLCipher) connection and apply the encryption key if provided.
 
     If ``password`` is ``None`` the connection is opened without a key (useful for testing).
     """
-    conn = sqlcipher.connect(db_path)
+    conn = sqlcipher.connect(db_path) # type: ignore[attr-defined]
     if password:
         conn.execute(f"PRAGMA key = '{password}';")
     return conn
