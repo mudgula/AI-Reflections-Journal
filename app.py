@@ -5,8 +5,10 @@ import random
 import streamlit as st
 from database import ReflectionDB
 from ai_services import AIService
+from import_db import import_legacy_db
 from weather_service import WeatherService
 import json
+import pathlib, tempfile
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -250,20 +252,52 @@ def insights_page():
     else:
         st.info("Add some journal entries to see insights!")
 
+def import_legacy_page():
+    st.header("Import Legacy Database")
+    legacy_file = st.file_uploader(
+        "Import legacy SQLite DB",
+        type=["db"],
+        help="Import legacy database",
+        key="legacy_db_uploader",
+    )
+    if st.button("Import legacy database", key="legacy_import_btn"):
+        if legacy_file is not None:
+            tmp_path = pathlib.Path(tempfile.gettempdir()) / legacy_file.name
+            with open(tmp_path, "wb") as f:
+                f.write(legacy_file.getbuffer())
+            count = import_legacy_db(str(tmp_path), st.session_state.db)
+            if count > 0:
+                st.success(f"Imported {count} entries from legacy DB.")
+                # Delete temporary file after successful import
+                try:
+                    tmp_path.unlink(missing_ok=True)
+                except Exception as e:
+                    logger.error(f"Failed to delete temporary file {tmp_path}: {e}")
+            else:
+                st.warning("No entries were imported.")
+        else:
+            st.warning("Please select a legacy DB file first.")
+
 def main():
     st.set_page_config(page_title="AI Reflection Journal", layout="wide")
     
     # Prompt for encrypted DB password and store it in session state
-    if 'db_password' not in st.session_state:
-        pwd = st.text_input('Database password', type='password')
-        if not pwd:
-            st.warning('Please enter the database password to continue.')
-            st.stop()
-        st.session_state.db_password = pwd
+    if not st.session_state.get('logged_in', False):
+        login_placeholder = st.empty()
+        with login_placeholder.form("login_form"):
+            pwd = st.text_input('Database password', type='password')
+            submitted = st.form_submit_button('Login')
+            if submitted:
+                if not pwd:
+                    st.warning('Please enter the database password to continue.')
+                else:
+                    st.session_state.db = ReflectionDB(password=pwd)
+                    st.session_state.logged_in = True
+                    login_placeholder.empty()
+                    st.rerun()
     else:
-        pwd = st.session_state.db_password
-    if 'db' not in st.session_state:
-        st.session_state.db = ReflectionDB(password=pwd)
+        # Database already initialized and user is logged in
+        pass
     
     st.title("AI Reflection Journal")
     
@@ -295,7 +329,8 @@ def main():
     pages = {
         "New Entry": "📝",
         "Past Entries": "📚",
-        "Insights": "📊"
+        "Insights": "📊",
+        "Legacy DB Import": "⬇️"
     }
     
     # Create navigation links with icons
@@ -303,6 +338,8 @@ def main():
         if st.sidebar.button(f"{icon} {page_name}", use_container_width=True):
             st.session_state.page = page_name
             st.rerun()
+
+    # Set default page if not set
     
     # Set default page if not set
     if 'page' not in st.session_state:
@@ -315,6 +352,9 @@ def main():
         past_entries_page()
     elif st.session_state.page == "Insights":
         insights_page()
+    elif st.session_state.page == "Legacy DB Import":
+        import_legacy_page()
+
 
 if __name__ == "__main__":
     logger.info("Starting Reflection Journal App...")
