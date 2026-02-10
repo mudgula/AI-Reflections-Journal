@@ -3,7 +3,6 @@ import random
 from langchain_ollama.llms import OllamaLLM
 import streamlit as st
 from langchain_core.prompts import PromptTemplate
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +13,6 @@ class AIService:
             # Get settings from secrets
             llm_secrets = st.secrets.get("llm", {})
             ollama_model = llm_secrets.get("ollama_model", "llama3.2:1b")
-            groq_model = llm_secrets.get("groq_model", "llama3-8b-8192")
             
             if provider == "ollama":
                 self.llm = OllamaLLM(

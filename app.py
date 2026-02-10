@@ -1,10 +1,8 @@
-from datetime import datetime
 from textblob import TextBlob
 import plotly.express as px
 import pandas as pd
 import random
 import streamlit as st
-import os
 from database import ReflectionDB
 from ai_services import AIService
 from weather_service import WeatherService
