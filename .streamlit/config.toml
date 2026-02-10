@@ -8,7 +8,3 @@ gatherUsageStats = false
 
 [server]
 enableStaticServing = true
-
-[llm]
-ollama_model = "dolphin3:latest"
-default_provider = "ollama"
