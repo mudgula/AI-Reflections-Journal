@@ -11,9 +11,14 @@ class AIService:
     def __init__(self, provider="ollama"):
         try:
             self.provider = provider
+            # Get settings from secrets
+            llm_secrets = st.secrets.get("llm", {})
+            ollama_model = llm_secrets.get("ollama_model", "llama3.2:1b")
+            groq_model = llm_secrets.get("groq_model", "llama3-8b-8192")
+            
             if provider == "ollama":
                 self.llm = OllamaLLM(
-                    model="dolphin3:latest",
+                    model=ollama_model,
                     base_url="http://localhost:11434",
                 )
             logger.info(f"AI Service initialized successfully with {provider}")
