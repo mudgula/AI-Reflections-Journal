@@ -132,3 +132,6 @@ Icon
 *.tmp
 *.bak
 *.swp
+
+# Claude Code Local Config
+.claude/
