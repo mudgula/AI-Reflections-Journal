@@ -1,9 +1,10 @@
 # AI Reflection Journal
 
-An intelligent journaling application that combines personal reflection with AI-powered insights, sentiment analysis, and weather tracking. Built with Streamlit and powered by local LLM (Ollama).
+An intelligent journaling application that combines personal reflection with AI-powered insights, sentiment analysis, and weather tracking. Built with Streamlit and powered by local LLM (Ollama). Journal entries are stored in a local database with SQLite encryption.
 
 **Note:** This application is a fork of [kouissar/AI-Reflections-Journal](https://github.com/kouissar/AI-Reflections-Journal#).
 Some effort will be made to keep this fork in sync with the upstream version, but this is an independent project for my own personal use.
+
 
 ## Features
 
@@ -15,8 +16,8 @@ Some effort will be made to keep this fork in sync with the upstream version, bu
 - 💭 AI-generated daily motivational quotes
 - 🏷️ Mood factors tagging
 - 🔒 Native local database encryption
+- ⬇️ Import plain-text database from upstream version
 
-**Status:** The application is functional, with a working Streamlit UI, AI insights via Ollama, weather integration, and SQLite encryption. Database migrations are managed by `initialize_db.py` and `migrate_db.py`. The repository includes a comprehensive `CLAUDE.md` for Claude Code guidance.
 
 ## Screenshots
 
@@ -40,66 +41,92 @@ _Track mood trends and analyze patterns over time_
 ![AI Insights](resources/img2.png)
 _Get therapeutic insights and suggestions from the AI_
 
+
 ## Requirements
 
 - Python 3.8+
 - Ollama (for local LLM)
 - WeatherAPI.com API key (free tier)
+- MacOS and Ubuntu Linux are natively supported 
+- For Windows, use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+
 
 ## Installation
 
 1. Clone the repository:
-   ```
+   ``` bash
    git clone https://github.com/mudgula/AI-Reflections-Journal.git
    cd AI-Reflections-Journal
    ```
+
 2. Create and activate a virtual environment:
-
-````bash
-python -m venv venv
-source venv/bin/activate # On Windows: venv\Scripts\activate```
-
-3. Install required packages:
-```bash
-pip install -r requirements.txt
-````
-
-4. Install and set up Ollama:
-
-   - Download and install Ollama from [Ollama's website](https://ollama.ai)
-   - Pull the required model:
-
    ```bash
-   ollama pull dolphin3:latest
+   python -m venv venv
+   source venv/bin/activate
    ```
 
-5. Set up WeatherAPI:
+3. Install sqlcipher:
 
-   - Sign up for a free API key at [WeatherAPI.com](https://www.weatherapi.com/signup.aspx)
-   - Create `.streamlit/secrets.toml` with your configuration:
+   MacOS (homebrew):
+      ```bash
+      brew update
+      brew install sqlcipher
+      ```
+      
+   Ubuntu Linux / WSL:
+      ```bash
+      sudo apt-get update
+      sudo apt-get install sqlcipher
+      ```
 
+4. Install required packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. Install and set up Ollama:
+
+- Download and install Ollama from [Ollama's website](https://ollama.ai)
+- Pull the desired model:
+
+   **Note:** Any mainstream model (Llama, Qwen, Gemma, Dolphin) between 2b and 8b parameters will work.
+
+   ```bash
+   ollama pull llama3.1:8b  # or whatever model you prefer
+   ```
+
+- Create `.streamlit/secrets.toml` and add your LLM configuration:
+   ```toml
+   [llm]
+   ollama_model = "llama3.1:8b"  # or whatever model you pulled
+   default_provider = "ollama"   # LMStudio future support planned. Public LLMs will never be supported.
+   ```
+
+6. Set up WeatherAPI:
+
+- Sign up for a free API key at [WeatherAPI.com](https://www.weatherapi.com/signup.aspx)
+- Add your weather configuration to `.streamlit/secrets.toml`:
    ```toml
    [weather]
    openweather_api_key = "your_weatherapi_key_here"
    zip_code = "your_zip_code"
    ```
 
-6. Initialize the database:
-
-```bash
-python initialize_db.py
-```
+7. Initialize the database:
+   ```bash
+   python initialize_db.py
+   ```
 
 ## Running the Application
 
 1. Start the Ollama service (if not already running)
 2. Launch the application:
+   ```bash
+   streamlit run app.py
+   ```
 
-```bash
-streamlit run app.py
-```
+   The application will be available at `http://localhost:8501`
 
-The application will be available at `http://localhost:8501`
 
 ## Usage Guide
 
@@ -108,39 +135,48 @@ The application will be available at `http://localhost:8501`
 1. Click on "New Entry" in the sidebar
 2. Rate your current mood (1-5)
 3. Select relevant mood factors
-4. Write your reflection in the text area
-5. Click "Save Entry" to store your entry
+4. Write your journal entry in the text area
+5. Click "Save Entry" to store your entry and generate an AI reflection
 
 ### Viewing Past Entries
 
-1. Navigate to "Past Entries" in the sidebar
+1. Click on "Past Entries" in the sidebar
 2. Expand entries to view full content
 3. See AI insights, weather data, and sentiment analysis
 4. Edit or delete entries as needed
 
 ### Analyzing Insights
 
-1. Go to "Insights" in the sidebar
+1. Click on "Insights" in the sidebar
 2. View mood trends over time
 3. Analyze sentiment patterns
 4. Track common mood factors
 
+### Import Plain-Text Database
+
+1. Click on "Legacy Database Import" in the sidebar
+2. Drag and drop or browse to the plain-text SQLite database you want to import
+3. Browse to the Past Entries page to see the imported entries
+
+
 ## Project Structure
 
 ```
-ai-reflection-journal/
+AI-Reflections-Journal/
 ├── app.py               # Main Streamlit application
 ├── database.py          # Database operations
 ├── ai_services.py       # AI/LLM integration
 ├── weather_service.py   # Weather API integration
-├── initialize_db.py     # Database initialization script
+├── initialize_db.py     # Encrypted database initialization script
 ├── migrate_db.py        # Database migration script (for backwards compatibility)
+├── import_db.py         # Legacy plain-text database import script
 ├── requirements.txt     # Python dependencies
-├── README.md            # Documentation
+├── README.md            # This documentation
+├── CLAUDE.md            # Claude Code '/init' output
 ├── .gitignore           # Git ignore rules
 └── .streamlit/          # Streamlit configuration
     ├── config.toml      # App configuration
-    └── secrets.toml     # API keys (not in repo)
+    └── secrets.toml     # Personal settings and API keys (not in repo)
 ```
 
 ## Configuration Options
@@ -148,8 +184,11 @@ ai-reflection-journal/
 ### Streamlit Secrets
 
 Create `.streamlit/secrets.toml`:
-
 ```toml
+[llm]
+ollama_model = "your_preferred_model" 
+default_provider = "ollama"  
+
 [weather]
 openweather_api_key = "your_weatherapi_key"
 zip_code = "your_zip_code"
@@ -158,7 +197,6 @@ zip_code = "your_zip_code"
 ### Streamlit Config
 
 The `.streamlit/config.toml` file contains UI customization:
-
 ```toml
 [theme]
 primaryColor = "#FF4B4B"
@@ -171,7 +209,6 @@ font = "sans serif"
 ## Database Schema
 
 The application uses SQLite with the following schema:
-
 ```sql
 CREATE TABLE entries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -193,7 +230,6 @@ CREATE TABLE entries (
 1. Fork the repository
 2. Create a new branch for your feature
 3. Install development dependencies:
-
 ```bash
 pip install -r requirements.txt
 ```
@@ -208,10 +244,24 @@ pip install -r requirements.txt
 ### Testing
 
 Run tests before submitting pull requests:
-
 ```bash
-python -m pytest tests/
+python -m pytest
 ```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+Please ensure your PR:
+
+- Follows the existing code style
+- Includes appropriate tests
+- Updates documentation as needed
+- Describes the changes made
+
 
 ## Troubleshooting
 
@@ -233,24 +283,13 @@ python -m pytest tests/
    - Run migrate_db.py to ensure schema is up to date
    - Check file permissions
    - Verify SQLite installation
+   - Verify SQLCipher installation
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-Please ensure your PR:
-
-- Follows the existing code style
-- Includes appropriate tests
-- Updates documentation as needed
-- Describes the changes made
 
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
+
 
 ## Acknowledgments
 
@@ -258,20 +297,4 @@ MIT License. See [LICENSE](LICENSE) for details.
 - LLM support by [Ollama](https://ollama.ai/)
 - Weather data from [WeatherAPI.com](https://www.weatherapi.com/)
 - Sentiment analysis using [TextBlob](https://textblob.readthedocs.io/)
-
-```
-
-This complete documentation now includes:
-- Detailed installation steps
-- Usage guide
-- Project structure
-- Configuration options
-- Database schema
-- Development guidelines
-- Troubleshooting section
-- Contributing guidelines
-- License information
-- Acknowledgments
-
-The documentation should help both users and developers understand and work with the application effectively.
-```
+- Original idea by [kouissar/AI-Reflections-Journal](https://github.com/kouissar/AI-Reflections-Journal#)
