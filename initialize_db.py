@@ -99,7 +99,9 @@ def ensure_database() -> str:
     Returns a human‑readable status message that the CLI can print.
     """
     # Allow an environment variable to override the location – useful for testing
-    db_path = os.getenv("REFLECTIONS_DB_PATH") or os.path.join(os.getcwd(), "reflections.db")
+    # Ensure the data directory exists
+    os.makedirs(os.path.join(os.getcwd(), "data"), exist_ok=True)
+    db_path = os.getenv("REFLECTIONS_DB_PATH") or os.path.join(os.getcwd(), "data", "reflections.db")
 
     if not os.path.exists(db_path):
         logger.info("Database file not found – creating new DB at %s", db_path)

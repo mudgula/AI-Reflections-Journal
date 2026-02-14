@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 class ReflectionDB:
     def __init__(self, password: str | None = None):
         try:
-            self.db_path = os.getenv("REFLECTIONS_DB_PATH") or os.path.join(os.getcwd(), 'reflections.db')
+            self.db_path = os.getenv("REFLECTIONS_DB_PATH") or os.path.join(os.getcwd(), 'data', 'reflections.db')
+            # Ensure the data directory exists
+            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
             self.password = password
             logger.info(f"Connecting to database at: {self.db_path}")
             self.conn = open_encrypted_db(self.db_path, password)

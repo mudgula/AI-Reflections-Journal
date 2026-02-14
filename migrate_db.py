@@ -9,7 +9,10 @@ logger = logging.getLogger(__name__)
 def migrate_database():
     try:
         # Connect to the database
-        db_path = os.path.join(os.getcwd(), 'reflections.db')
+        # Ensure data directory exists
+        data_dir = os.path.join(os.getcwd(), "data")
+        os.makedirs(data_dir, exist_ok=True)
+        db_path = os.path.join(data_dir, "reflections.db")
         logger.info(f"Connecting to database at: {db_path}")
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
