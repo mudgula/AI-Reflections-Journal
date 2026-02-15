@@ -1,0 +1,258 @@
+[
+  {
+    "category": "Love and Relationships",
+    "prompt": "Who do you trust most? Why?"
+  },
+  {
+    "category": "Love and Relationships",
+    "prompt": "What are your strengths in relationships (kindness, empathy, etc.)?"
+  },
+  {
+    "category": "Love and Relationships",
+    "prompt": "How do you draw strength from loved ones?"
+  },
+  {
+    "category": "Love and Relationships",
+    "prompt": "What do you value most in relationships (trust, respect, sense of humor, etc.)?"
+  },
+  {
+    "category": "Love and Relationships",
+    "prompt": "What three important things have you learned from previous relationships?"
+  },
+  {
+    "category": "Love and Relationships",
+    "prompt": "What five traits do you value most in potential partners?"
+  },
+  {
+    "category": "Love and Relationships",
+    "prompt": "How do you show compassion to others? How can you extend that same compassion to yourself?"
+  },
+  {
+    "category": "Love and Relationships",
+    "prompt": "What are three things working well in your current relationship? What are three things that could be better?"
+  },
+  {
+    "category": "Love and Relationships",
+    "prompt": "What boundaries could you set in your relationships to safeguard your own well-being?"
+  },
+  {
+    "category": "Love and Relationships",
+    "prompt": "What do you most want your children (or future children) to learn from you?"
+  },
+  {
+    "category": "Love and Relationships",
+    "prompt": "How can you better support and appreciate your loved ones?"
+  },
+  {
+    "category": "Love and Relationships",
+    "prompt": "What does love mean to you? How do you recognize it in a relationship?"
+  },
+  {
+    "category": "Love and Relationships",
+    "prompt": "List three things you\u2019d like to tell a friend, family member, or partner."
+  },
+  {
+    "category": "Work and career",
+    "prompt": "How do you use your personal strengths and abilities at work?"
+  },
+  {
+    "category": "Work and career",
+    "prompt": "How do your co-workers and supervisors recognize your strengths?"
+  },
+  {
+    "category": "Work and career",
+    "prompt": "How does work fulfill you? Does it leave you wanting more?"
+  },
+  {
+    "category": "Work and career",
+    "prompt": "What part of your workday do you most enjoy?"
+  },
+  {
+    "category": "Work and career",
+    "prompt": "What about your work feels real, necessary, or important to you?"
+  },
+  {
+    "category": "Work and career",
+    "prompt": "Do you see yourself in the same job in 10 years?"
+  },
+  {
+    "category": "Work and career",
+    "prompt": "What are your career ambitions?"
+  },
+  {
+    "category": "Work and career",
+    "prompt": "What three things can help you begin working to accomplish those goals?"
+  },
+  {
+    "category": "Work and career",
+    "prompt": "What can you do to improve your work performance?"
+  },
+  {
+    "category": "Work and career",
+    "prompt": "What does your work teach you? Does it offer continued opportunities for learning and growth?"
+  },
+  {
+    "category": "Work and career",
+    "prompt": "Does your work drain or overwhelm you? Why? Is this something you can change?"
+  },
+  {
+    "category": "Self-reflection",
+    "prompt": "What values do you consider most important in life (honesty, justice, altruism, loyalty, etc.)? How do your actions align with those values?"
+  },
+  {
+    "category": "Self-reflection",
+    "prompt": "What three changes can you make to live according to your personal values?"
+  },
+  {
+    "category": "Self-reflection",
+    "prompt": "Describe yourself using the first 10 words that come to mind. Then, list 10 words that you\u2019d like to use to describe yourself. List a few ways to transform those descriptions into reality."
+  },
+  {
+    "category": "Self-reflection",
+    "prompt": "What do you appreciate most about your personality? What aspects do you find harder to accept?"
+  },
+  {
+    "category": "Self-reflection",
+    "prompt": "Explore an opinion or two that you held in the past but have since questioned or changed. What led you to change that opinion?"
+  },
+  {
+    "category": "Self-reflection",
+    "prompt": "List three personal beliefs that you\u2019re willing to reconsider or further explore."
+  },
+  {
+    "category": "Self-reflection",
+    "prompt": "Finish this sentence: \u201cMy life would be incomplete without \u2026\u201d"
+  },
+  {
+    "category": "Self-reflection",
+    "prompt": "Describe one or two significant life events that helped shape you into who you are today."
+  },
+  {
+    "category": "Self-reflection",
+    "prompt": "When do you trust yourself most? When do you find it harder to have faith in your instincts?"
+  },
+  {
+    "category": "Self-reflection",
+    "prompt": "What three things would you most like others (loved ones, potential friends and partners, professional acquaintances, etc.) to know about you?"
+  },
+  {
+    "category": "Uncomfortable emotions",
+    "prompt": "What difficult thoughts or emotions come up most frequently for you?"
+  },
+  {
+    "category": "Uncomfortable emotions",
+    "prompt": "Which emotions do you find hardest to accept (guilt, anger, disappointment, etc.)? How do you handle these emotions?"
+  },
+  {
+    "category": "Uncomfortable emotions",
+    "prompt": "Describe a choice you regret. What did you learn from it?"
+  },
+  {
+    "category": "Uncomfortable emotions",
+    "prompt": "What parts of daily life cause stress, frustration, or sadness? What can you do to change those experiences?"
+  },
+  {
+    "category": "Uncomfortable emotions",
+    "prompt": "What are three things that can instantly disrupt a good mood and bring you down? What strategies do you use to counter these effects?"
+  },
+  {
+    "category": "Uncomfortable emotions",
+    "prompt": "What are three self-defeating thoughts that show up in your self-talk? How can you reframe them to encourage yourself instead?"
+  },
+  {
+    "category": "Uncomfortable emotions",
+    "prompt": "What go-to coping strategies help you get through moments of emotional or physical pain?"
+  },
+  {
+    "category": "Uncomfortable emotions",
+    "prompt": "Who do you trust with your most painful and upsetting feelings? How can you connect with them when feeling low?"
+  },
+  {
+    "category": "Uncomfortable emotions",
+    "prompt": "What do you fear most? Have your fears changed throughout life?"
+  },
+  {
+    "category": "Living your best life",
+    "prompt": "Describe your favorite thing to do when feeling low."
+  },
+  {
+    "category": "Living your best life",
+    "prompt": "What three ordinary things bring you the most joy?"
+  },
+  {
+    "category": "Living your best life",
+    "prompt": "List three strategies that help you stay present in your daily routines. Then, list three strategies to help boost mindfulness in your life."
+  },
+  {
+    "category": "Living your best life",
+    "prompt": "How do you prioritize self-care?"
+  },
+  {
+    "category": "Living your best life",
+    "prompt": "Describe two or three things you do to relax."
+  },
+  {
+    "category": "Living your best life",
+    "prompt": "What aspects of your life are you most grateful for?"
+  },
+  {
+    "category": "Living your best life",
+    "prompt": "How do you show yourself kindness and compassion each day?"
+  },
+  {
+    "category": "Living your best life",
+    "prompt": "Write a short love letter to some object or place that makes you happy."
+  },
+  {
+    "category": "Living your best life",
+    "prompt": "What place makes you feel most peaceful? Describe that place using all five senses."
+  },
+  {
+    "category": "Living your best life",
+    "prompt": "List 10 things that inspire or motivate you."
+  },
+  {
+    "category": "Living your best life",
+    "prompt": "What are your favorite hobbies? Why?"
+  },
+  {
+    "category": "Personal growth and life goals",
+    "prompt": "What parts of life surprised you most? What turned out the way you expected it would?"
+  },
+  {
+    "category": "Personal growth and life goals",
+    "prompt": "What three things would you share with your teenage self? What three questions would you want to ask an older version of yourself?"
+  },
+  {
+    "category": "Personal growth and life goals",
+    "prompt": "List three important goals. How do they match up to your goals from 5 years ago?"
+  },
+  {
+    "category": "Personal growth and life goals",
+    "prompt": "Do your goals truly reflect your desires? Or do they reflect what someone else (a parent, partner, friend, etc.) wants for you?"
+  },
+  {
+    "category": "Personal growth and life goals",
+    "prompt": "What helps you stay focused and motivated when you feel discouraged?"
+  },
+  {
+    "category": "Personal growth and life goals",
+    "prompt": "What do you look forward to most in the future?"
+  },
+  {
+    "category": "Personal growth and life goals",
+    "prompt": "Identify one area where you\u2019d like to improve. Then, list three specific actions you can take to create that change."
+  },
+  {
+    "category": "Personal growth and life goals",
+    "prompt": "How do you make time for yourself each day?"
+  },
+  {
+    "category": "Personal growth and life goals",
+    "prompt": "What do you most want to accomplish in life?"
+  },
+  {
+    "category": "Personal growth and life goals",
+    "prompt": "List three obstacles lying in the way of your contentment or happiness. Then, list two potential solutions to begin overcoming each obstacle."
+  }
+]
