@@ -3,6 +3,7 @@ import random
 from langchain_ollama.llms import OllamaLLM
 import streamlit as st
 from langchain_core.prompts import PromptTemplate
+import urllib.request, json
 
 logger = logging.getLogger(__name__)
 
@@ -25,29 +26,43 @@ class AIService:
             self.llm = None
 
     def generate_daily_quote(self):
+        # Primary method: fetch a random quote from ZenQuotes API
+        try:
+            import requests  # Imported here to avoid unnecessary dependency if not used
+            response = requests.get('https://zenquotes.io/api/random', timeout=5)
+            response.raise_for_status()
+            data = response.json()
+            # Expected format: [{"q": "Quote", "a": "Author", ...}]
+            if isinstance(data, list) and data:
+                quote = data[0].get('q')
+                author = data[0].get('a')
+                if quote and author:
+                    return f'"{quote}" - {author}', "ZenQuotes"
+        except Exception as api_err:
+            logger.warning(f"ZenQuotes API failed ({api_err}); falling back to LLM.")
+        # Fallback: use the LLM to generate a quote
         try:
             if not self.llm:
                 raise Exception("LLM not initialized")
-
             prompt = PromptTemplate(
                 input_variables=[],
-                template="""Generate an inspiring and thoughtful quote about self-reflection, mindfulness, or personal growth. 
+                template="""Generate an inspiring and thoughtful quote about self-reflection, mindfulness, or personal growth.
                 The quote should be brief (max 2-3 sentences) and include the author. The quote must be from a real person and not made up.
-                Format: "Quote" - Author"""
+                No Steve Jobs quotes.
+                Format: \"Quote\" - Author"""
             )
-            
-            response = self.llm.invoke(prompt.format())
-            return response.strip()  # String from Ollama
-            
+            llm_response = self.llm.invoke(prompt.format())
+            return llm_response.strip(), "AI"
         except Exception as e:
-            logger.error(f"Error generating quote: {str(e)}")
+            logger.error(f"Error generating quote via LLM: {str(e)}")
             fallback_quotes = [
                 '"The only journey is the one within." - Rainer Maria Rilke',
                 '"Know thyself." - Socrates',
                 '"Self-awareness is the key to self-mastery." - Gretchen Rubin',
                 '"Reflection is the lamp of the heart." - Al-Ghazali'
             ]
-            return random.choice(fallback_quotes)
+            return random.choice(fallback_quotes), "Fallback"
+
 
     def analyze_entry(self, content, mood, mood_factors):
         try:

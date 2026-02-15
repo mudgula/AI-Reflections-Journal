@@ -9,6 +9,7 @@ from import_db import import_legacy_db
 from weather_service import WeatherService
 import json
 import pathlib, tempfile
+from prompt_service import get_categories, get_prompts_by_category, get_random_prompt
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -17,9 +18,12 @@ logger = logging.getLogger(__name__)
 def display_daily_quote():
     if 'daily_quote' not in st.session_state:
         ai_service = AIService(provider=st.session_state.llm_provider)
-        st.session_state.daily_quote = ai_service.generate_daily_quote()
+        # generate_daily_quote now returns a tuple (quote, source)
+        quote, source = ai_service.generate_daily_quote()
+        st.session_state.daily_quote = quote
+        st.session_state.quote_source = source
     st.caption("Daily motivational quote:")
-    st.markdown(f"*{st.session_state.daily_quote}*", help="Daily AI-generated inspiration")
+    st.markdown(f"*{st.session_state.daily_quote}*", help=f"Daily inspiration from {st.session_state.get('quote_source', 'unknown')}")
     st.markdown("---")
 
 def generate_prompt(mood):
@@ -83,60 +87,29 @@ def display_weather():
     
     return None
 
-def new_entry_page():
-    st.header("New Journal Entry")
-    
-    # Get weather data
-    weather_data = display_weather()
-    
-    mood = st.slider("How are you feeling today?", 1, 5, 3,
-                     help="1 = Very Low, 5 = Very High")
-    
-    prompt = generate_prompt(mood)
-    st.write("📝", prompt)
-    
-    mood_factors = st.multiselect(
-        "What factors are influencing your mood?",
-        ["Work", "Relationships", "Health", "Family", "Hobbies", "Weather", "Sleep"]
-    )
-    
-    content = st.text_area("Your reflection", height=200)
-    
-    if st.button("Save Entry"):
-        if content:
-            # Get AI analysis first
-            ai_service = AIService(provider=st.session_state.llm_provider)
-            analysis = ai_service.analyze_entry(
-                content,
-                mood,
-                ", ".join(mood_factors) if mood_factors else None
-            )
-            
-            # Save the entry with the AI insight
-            success = st.session_state.db.add_entry(
-                content=content,
-                mood=mood,
-                mood_factors=", ".join(mood_factors) if mood_factors else None,
-                ai_insight=analysis,
-                weather_data=weather_data
-            )
-            
-            if success:
-                st.session_state.last_analysis = analysis
-                st.success("Entry saved successfully!")
-                st.rerun()
-        else:
-            st.error("Please write something before saving.")
-    
-    # Display the last analysis if it exists
-    if 'last_analysis' in st.session_state:
-        st.markdown("### AI Insight")
-        st.markdown(st.session_state.last_analysis)
-        
-        # Add a button to clear the analysis
-        if st.button("Clear Analysis"):
-            del st.session_state.last_analysis
-            st.rerun()
+def prompt_generator_page():
+    st.header("Prompt Generator")
+    # Load categories
+    categories = get_categories()
+    selected_category = st.selectbox("Select a category", categories)
+    # Show prompts for category
+    prompts = get_prompts_by_category(selected_category)
+    st.write(f"**Prompts in {selected_category}:**")
+    for i, p in enumerate(prompts, 1):
+        st.write(f"{i}. {p}")
+    # Random prompt button
+    if st.button("Random Prompt"):
+        random_prompt = get_random_prompt(selected_category)
+        st.session_state.prepopulated_prompt = random_prompt
+        st.success("Random prompt selected and will be used in New Entry.")
+    # Use selected prompt button (if a prompt is clicked?)
+    # Allow user to pick a prompt from list via selectbox
+    chosen_prompt = st.selectbox("Or choose a specific prompt", prompts, key="chosen_prompt_select")
+    if st.button("Use this Prompt"):
+        st.session_state.prepopulated_prompt = chosen_prompt
+        st.success("Prompt will be used in New Entry.")
+    st.info("After selecting a prompt, navigate to New Entry via the sidebar.")
+
 
 def edit_entry(entry):
     st.subheader("Edit Entry")
@@ -328,6 +301,7 @@ def main():
     # Using emojis as icons
     pages = {
         "New Entry": "📝",
+        "Prompt Generator": "💡",
         "Past Entries": "📚",
         "Insights": "📊",
         "Legacy DB Import": "⬇️"
@@ -348,6 +322,8 @@ def main():
     # Display the selected page
     if st.session_state.page == "New Entry":
         new_entry_page()
+    elif st.session_state.page == "Prompt Generator":
+        prompt_generator_page()
     elif st.session_state.page == "Past Entries":
         past_entries_page()
     elif st.session_state.page == "Insights":
@@ -355,6 +331,49 @@ def main():
     elif st.session_state.page == "Legacy DB Import":
         import_legacy_page()
 
+
+def new_entry_page():
+    st.header("New Journal Entry")
+    # Get weather data
+    weather_data = display_weather()
+    # Mood slider
+    mood = st.slider("How are you feeling today?", 1, 5, 3,
+                     help="1 = Very Low, 5 = Very High")
+    # Random prompt based on mood
+    prompt = generate_prompt(mood)
+    st.write("📝", prompt)
+    # Mood factors multiselect
+    mood_factors = st.multiselect(
+        "What factors are influencing your mood?",
+        ["Work", "Relationships", "Health", "Family", "Hobbies", "Weather", "Sleep"]
+    )
+    # Prepopulate with selected prompt if available
+    default_text = st.session_state.get('prepopulated_prompt', '')
+    content = st.text_area("Your reflection", value=default_text, height=200)
+    if st.button("Save Entry"):
+        if content:
+            ai_service = AIService(provider=st.session_state.llm_provider)
+            analysis = ai_service.analyze_entry(
+                content,
+                mood,
+                ", ".join(mood_factors) if mood_factors else None
+            )
+            success = st.session_state.db.add_entry(
+                content=content,
+                mood=mood,
+                mood_factors=", ".join(mood_factors) if mood_factors else None,
+                ai_insight=analysis,
+                weather_data=weather_data
+            )
+            if success:
+                st.session_state.last_analysis = analysis
+                # Clear the prepopulated prompt after use
+                if 'prepopulated_prompt' in st.session_state:
+                    del st.session_state.prepopulated_prompt
+                st.success("Entry saved successfully!")
+                st.rerun()
+        else:
+            st.error("Please write something before saving.")
 
 if __name__ == "__main__":
     logger.info("Starting Reflection Journal App...")
