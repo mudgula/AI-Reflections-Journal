@@ -76,7 +76,7 @@ def test_ensure_database_adds_missing_column(set_db_path, monkeypatch):
     called = {"ran": False}
     def fake_migrate():
         called["ran"] = True
-    monkeypatch.setitem(__import__("sys").modules, "migrate_db", type("FakeMigrate", (), {"migrate_database": fake_migrate})())
+    monkeypatch.setitem(__import__("sys").modules, "migrate_db", type("FakeMigrate", (), {"migrate_database": fake_migrate}))
     from initialize_db import ensure_database
     msg = ensure_database()
     assert "Migration applied" in msg
