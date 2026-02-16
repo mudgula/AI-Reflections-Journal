@@ -60,16 +60,18 @@ def generate_prompt(mood):
 def display_weather():
     if 'weather_service' not in st.session_state:
         # Check for multiple possible key names for flexibility
-        api_key = st.secrets.get("weather", {}).get("api_key") or \
-                  st.secrets.get("weather", {}).get("openweather_api_key") or ""
+        weather_secrets = st.secrets.get("weather", {})
+        api_key = weather_secrets.get("api_key") or weather_secrets.get("openweather_api_key") or ""
+        zip_code = weather_secrets.get("zip_code", "20871")
         st.session_state.weather_service = WeatherService(api_key)
-    
-    zip_code = st.secrets.get("weather", {}).get("zip_code", "20871") # Default zip code
-    
+        st.session_state.weather_zip_code = zip_code
+
+    zip_code = st.session_state.get("weather_zip_code", "20871")
+
     if not st.session_state.weather_service.api_key:
         st.sidebar.warning("⚠️ Weather API key missing. Please add it to your secrets.")
         return None
-    
+
     try:
         weather_info = st.session_state.weather_service.get_weather(zip_code)
         if weather_info:
@@ -83,8 +85,9 @@ def display_weather():
             st.sidebar.write(f"💧 Humidity: {weather_info['humidity']}%")
             return weather_info
     except Exception as e:
-        st.sidebar.error(f"Weather error: {str(e)}")
-    
+        logger.warning(f"Weather service unavailable: {e}")
+        st.sidebar.warning("Weather data unavailable. Entry will save without weather data.")
+
     return None
 
 def prompt_generator_page():
@@ -149,10 +152,10 @@ def edit_entry(entry):
 
 def past_entries_page():
     st.header("Past Entries")
-    
+
     if st.button("Refresh Entries"):
         st.rerun()
-    
+
     entries = st.session_state.db.get_entries()
     if not entries.empty:
         for _, entry in entries.iterrows():
@@ -169,10 +172,13 @@ def past_entries_page():
 
                 # Display weather if available
                 if entry.get('weather_data'):
-                    weather = json.loads(entry['weather_data'])
-                    st.markdown("### Weather During Entry")
-                    st.write(f"🌡️ {weather['temperature']}°F - {weather['description']}")
-                    st.write(f"💧 Humidity: {weather['humidity']}%")
+                    try:
+                        weather = json.loads(entry['weather_data'])
+                        st.markdown("### Weather During Entry")
+                        st.write(f"🌡️ {weather['temperature']}°F - {weather['description']}")
+                        st.write(f"💧 Humidity: {weather['humidity']}%")
+                    except (json.JSONDecodeError, KeyError) as e:
+                        logger.warning(f"Failed to parse weather data: {e}")
 
                 sentiment = TextBlob(entry['content']).sentiment  # type: ignore[attr-defined]
                 score = sentiment.polarity  # type: ignore[attr-defined]
@@ -196,7 +202,7 @@ def past_entries_page():
                         if st.session_state.db.delete_entry(entry['id']):
                             st.success("Entry deleted successfully!")
                             st.rerun()
-                            
+
         # Show edit form if an entry is being edited
         if hasattr(st.session_state, 'editing') and st.session_state.editing is not None:
             edit_entry(st.session_state.editing)
@@ -205,24 +211,28 @@ def past_entries_page():
 
 def insights_page():
     st.header("Insights & Analytics")
-    entries = st.session_state.db.get_entries(limit=100)
-    
-    if not entries.empty:
-        fig_mood = px.line(entries, x='date', y='mood',
-                          title='Mood Trends Over Time')
-        st.plotly_chart(fig_mood)
+    try:
+        entries = st.session_state.db.get_entries(limit=100)
 
-        fig_sentiment = px.scatter(entries, x='mood', y='sentiment',
-                                 title='Mood vs. Sentiment Analysis')
-        st.plotly_chart(fig_sentiment)
+        if not entries.empty:
+            fig_mood = px.line(entries, x='date', y='mood',
+                              title='Mood Trends Over Time')
+            st.plotly_chart(fig_mood)
 
-        if entries['mood_factors'].notna().any():
-            factors = entries['mood_factors'].str.split(', ').explode()
-            factor_counts = factors.value_counts()
-            fig_factors = px.bar(factor_counts, title='Common Mood Factors')
-            st.plotly_chart(fig_factors)
-    else:
-        st.info("Add some journal entries to see insights!")
+            fig_sentiment = px.scatter(entries, x='mood', y='sentiment',
+                                     title='Mood vs. Sentiment Analysis')
+            st.plotly_chart(fig_sentiment)
+
+            if entries['mood_factors'].notna().any():
+                factors = entries['mood_factors'].str.split(', ').explode()
+                factor_counts = factors.value_counts()
+                fig_factors = px.bar(factor_counts, title='Common Mood Factors')
+                st.plotly_chart(fig_factors)
+        else:
+            st.info("Add some journal entries to see insights!")
+    except Exception as e:
+        logger.error(f"Insights page error: {e}")
+        st.error(f"Error generating insights: {str(e)}")
 
 def import_legacy_page():
     st.header("Import Legacy Database")
@@ -252,7 +262,7 @@ def import_legacy_page():
 
 def main():
     st.set_page_config(page_title="AI Reflection Journal", layout="wide")
-    
+
     # Prompt for encrypted DB password and store it in session state
     if not st.session_state.get('logged_in', False):
         login_placeholder = st.empty()
@@ -263,16 +273,20 @@ def main():
                 if not pwd:
                     st.warning('Please enter the database password to continue.')
                 else:
-                    st.session_state.db = ReflectionDB(password=pwd)
-                    st.session_state.logged_in = True
-                    login_placeholder.empty()
-                    st.rerun()
+                    try:
+                        st.session_state.db = ReflectionDB(password=pwd)
+                        st.session_state.logged_in = True
+                        login_placeholder.empty()
+                        st.rerun()
+                    except Exception as e:
+                        logger.error(f"Login error: {e}")
+                        st.error(f"Database login failed: {str(e)}")
     else:
         # Database already initialized and user is logged in
         pass
-    
+
     st.title("AI Reflection Journal")
-    
+
     # Add LLM provider selection
     with st.sidebar:
         st.sidebar.title("Settings")
@@ -282,7 +296,7 @@ def main():
             index=0,
             help="Ollama only option for now. Public LLM providers cannot be trusted with personal info."
         )
-        
+
         # Store the selected provider in session state
         if 'llm_provider' not in st.session_state or st.session_state.llm_provider != llm_provider:
             st.session_state.llm_provider = llm_provider
@@ -291,12 +305,12 @@ def main():
                 del st.session_state.ai_service
             if 'daily_quote' in st.session_state:
                 del st.session_state.daily_quote
-    
+
     display_daily_quote()  # Add the daily quote right under the title
-    
+
     # Replace radio buttons with sidebar links
     st.sidebar.title("Navigation")
-    
+
     # Using emojis as icons
     pages = {
         "New Entry": "📝",
@@ -305,7 +319,7 @@ def main():
         "Insights": "📊",
         "Legacy DB Import": "⬇️"
     }
-    
+
     # Create navigation links with icons
     for page_name, icon in pages.items():
         if st.sidebar.button(f"{icon} {page_name}", use_container_width=True):
@@ -313,22 +327,25 @@ def main():
             st.rerun()
 
     # Set default page if not set
-    
-    # Set default page if not set
     if 'page' not in st.session_state:
         st.session_state.page = "New Entry"
-    
-    # Display the selected page
-    if st.session_state.page == "New Entry":
-        new_entry_page()
-    elif st.session_state.page == "Prompt Generator":
-        prompt_generator_page()
-    elif st.session_state.page == "Past Entries":
-        past_entries_page()
-    elif st.session_state.page == "Insights":
-        insights_page()
-    elif st.session_state.page == "Legacy DB Import":
-        import_legacy_page()
+
+    # Display the selected page with error handling
+    try:
+        if st.session_state.page == "New Entry":
+            new_entry_page()
+        elif st.session_state.page == "Prompt Generator":
+            prompt_generator_page()
+        elif st.session_state.page == "Past Entries":
+            past_entries_page()
+        elif st.session_state.page == "Insights":
+            insights_page()
+        elif st.session_state.page == "Legacy DB Import":
+            import_legacy_page()
+    except Exception as e:
+        logger.error(f"Page render error for {st.session_state.page}: {e}")
+        st.error(f"An error occurred while loading this page: {str(e)}")
+        st.info("Please try another page or refresh the app.")
 
 
 def new_entry_page():
