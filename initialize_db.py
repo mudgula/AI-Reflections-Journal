@@ -13,10 +13,15 @@ def open_encrypted_db(db_path: str, password: str | None = None) -> sqlcipher.Co
     """Open a SQLite (SQLCipher) connection and apply the encryption key if provided.
 
     If ``password`` is ``None`` the connection is opened without a key (useful for testing).
+    Password is cleared from memory immediately after use.
     """
     conn = sqlcipher.connect(db_path) # type: ignore[attr-defined]
     if password:
-        conn.execute(f"PRAGMA key = '{password}';")
+        try:
+            conn.execute(f"PRAGMA key = '{password}';")
+        finally:
+            # Clear password from memory
+            del password
     return conn
 
 

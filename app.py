@@ -10,6 +10,7 @@ from weather_service import WeatherService
 import json
 import pathlib, tempfile
 from prompt_service import get_categories, get_prompts_by_category, get_random_prompt
+from constants import MOOD_MIN, MOOD_MAX, MOOD_DEFAULT, MOOD_SCALE, MOOD_FACTORS
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -28,7 +29,7 @@ def display_daily_quote():
 
 def generate_prompt(mood):
     prompts = {
-        5: [
+        MOOD_MAX: [
             "What made today particularly wonderful?",
             "How can you recreate this positive energy tomorrow?",
             "Who would you like to share your joy with?"
@@ -48,7 +49,7 @@ def generate_prompt(mood):
             "How could you better support yourself?",
             "What would help you feel more grounded?"
         ],
-        1: [
+        MOOD_MIN: [
             "What do you need right now?",
             "Who could you reach out to for support?",
             "What's one tiny step you could take to feel better?"
@@ -353,15 +354,18 @@ def new_entry_page():
     # Get weather data
     weather_data = display_weather()
     # Mood slider
-    mood = st.slider("How are you feeling today?", 1, 5, 3,
-                     help="1 = Very Low, 5 = Very High")
+    mood = st.slider(
+        "How are you feeling today?",
+        MOOD_MIN, MOOD_MAX, MOOD_DEFAULT,
+        help=f"{MOOD_MIN} = Very Low, {MOOD_MAX} = Very High | {MOOD_SCALE.get(mood, 'Unknown')}"
+    )
     # Random prompt based on mood
     prompt = generate_prompt(mood)
     st.write("📝", prompt)
     # Mood factors multiselect
     mood_factors = st.multiselect(
         "What factors are influencing your mood?",
-        ["Work", "Relationships", "Health", "Family", "Hobbies", "Weather", "Sleep"]
+        MOOD_FACTORS
     )
     # Prepopulate with selected prompt if available
     default_text = st.session_state.get('prepopulated_prompt', '')
