@@ -154,8 +154,8 @@ def past_entries_page():
         st.rerun()
     
     entries = st.session_state.db.get_entries()
-    if entries:
-        for entry in entries:
+    if not entries.empty:
+        for _, entry in entries.iterrows():
             with st.expander(f"Entry from {entry['date'][:10]}"):
                 st.write(f"**Mood:** {'😊' * int(entry['mood'])}")
                 if entry.get('mood_factors'):
@@ -189,7 +189,7 @@ def past_entries_page():
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("Edit", key=f"edit_{entry['id']}"):
-                        st.session_state.editing = entry
+                        st.session_state.editing = entry.to_dict()
                         st.rerun()
                 with col2:
                     if st.button("Delete", key=f"delete_{entry['id']}"):
@@ -205,8 +205,7 @@ def past_entries_page():
 
 def insights_page():
     st.header("Insights & Analytics")
-    raw_entries = st.session_state.db.get_entries(limit=100)
-    entries = pd.DataFrame(raw_entries) if raw_entries else pd.DataFrame()
+    entries = st.session_state.db.get_entries(limit=100)
     
     if not entries.empty:
         fig_mood = px.line(entries, x='date', y='mood',

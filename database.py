@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, text
 from textblob import TextBlob
 from datetime import datetime
 import json
+import pandas as pd
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -52,9 +53,11 @@ class ReflectionDB:
 
     def update_entry(self, entry_id, content, mood, mood_factors, ai_insight=None):
         try:
+            # Convert entry_id to Python int (handles numpy.int64 from pandas)
+            entry_id = int(entry_id)
             sentiment = TextBlob(content).sentiment.polarity  # type: ignore[attr-defined]
-            conn = open_encrypted_db(self.db_path, self.password)
-            cursor = conn.cursor()
+            # Use the persistent connection from __init__
+            cursor = self.conn.cursor()
             # Preserve existing entry_type (NOT NULL)
             cursor.execute('SELECT entry_type FROM entries WHERE id = ?', (entry_id,))
             row = cursor.fetchone()
@@ -64,9 +67,8 @@ class ReflectionDB:
                 SET content = ?, mood = ?, mood_factors = ?, sentiment = ?, ai_insight = ?, entry_type = ?
                 WHERE id = ?
             ''', (content, mood, mood_factors, sentiment, ai_insight, entry_type, entry_id))
-            conn.commit()
+            self.conn.commit()
             logger.info(f"Entry {entry_id} updated successfully")
-            conn.close()
             return True
         except Exception as e:
             logger.error(f"Error updating entry: {str(e)}")
@@ -75,23 +77,23 @@ class ReflectionDB:
 
     def delete_entry(self, entry_id):
         try:
-            conn = open_encrypted_db(self.db_path, self.password)
-            cursor = conn.cursor()
+            # Convert entry_id to Python int (handles numpy.int64 from pandas)
+            entry_id = int(entry_id)
+            # Use the persistent connection from __init__
+            cursor = self.conn.cursor()
             cursor.execute('DELETE FROM entries WHERE id = ?', (entry_id,))
-            conn.commit()
+            self.conn.commit()
             logger.info(f"Entry {entry_id} deleted successfully")
-            conn.close()
             return True
         except Exception as e:
             logger.error(f"Error deleting entry: {str(e)}")
             st.error(f"Error deleting entry: {str(e)}")
             return False
-    
+
     def add_entry(self, content, mood, mood_factors, ai_insight=None, weather_data=None, entry_type="text"):
         try:
-            conn = open_encrypted_db(self.db_path, self.password)
-            sentiment = TextBlob(content).sentiment.polarity # type: ignore[attr-defined]
-            cursor = conn.cursor()
+            sentiment = TextBlob(content).sentiment.polarity  # type: ignore[attr-defined]
+            cursor = self.conn.cursor()
 
             cursor.execute('''
                 INSERT INTO entries (
@@ -104,12 +106,11 @@ class ReflectionDB:
                 sentiment, entry_type, ai_insight,
                 json.dumps(weather_data) if weather_data else None
             ))
-            conn.commit()
+            self.conn.commit()
 
             cursor.execute('SELECT COUNT(*) FROM entries')
             count = cursor.fetchone()[0]
             logger.info(f"Total entries after insert: {count}")
-            conn.close()
             return True
         except Exception as e:
             logger.error(f"Error adding entry: {str(e)}")
@@ -118,18 +119,19 @@ class ReflectionDB:
     
     def get_entries(self, limit=10):
         try:
-            # Use SQLAlchemy engine to execute query and fetch results
-            query = 'SELECT * FROM entries ORDER BY date DESC LIMIT :limit'
+            # Use the persistent connection from __init__ for consistency
+            query = 'SELECT * FROM entries ORDER BY date DESC LIMIT ?'
             logger.info(f"Fetching entries with query: {query}, limit: {limit}")
-            with self.engine.connect() as conn:
-                result = conn.execute(text(query), {"limit": limit})
-                rows = result.fetchall()
-            columns = result.keys()
-            # Convert to list of dicts for easier consumption without pandas
-            entries = [dict(zip(columns, row)) for row in rows]
+            cursor = self.conn.cursor()
+            cursor.execute(query, (limit,))
+            rows = cursor.fetchall()
+            # Get column names from cursor description
+            columns = [desc[0] for desc in cursor.description]
+            # Convert to pandas DataFrame for easier analysis and manipulation
+            entries = pd.DataFrame(rows, columns=columns)
             logger.info(f"Retrieved {len(entries)} entries")
             return entries
         except Exception as e:
             logger.error(f"Error getting entries: {str(e)}")
             st.error(f"Error retrieving entries: {str(e)}")
-            return [] 
+            return pd.DataFrame() 
